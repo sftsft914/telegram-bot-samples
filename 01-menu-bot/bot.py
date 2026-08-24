@@ -1,9 +1,12 @@
 """
 Menu Bot — demonstrates commands, inline keyboards, and callback query handling.
+Includes a tiny HTTP health-check server so it can run as a Render "Web Service".
 """
 
 import logging
 import os
+import threading
+from http.server import BaseHTTPRequestHandler, HTTPServer
 
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.ext import (
@@ -20,6 +23,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 BOT_TOKEN = os.environ.get("BOT_TOKEN", "PUT-YOUR-TOKEN-HERE")
+PORT = int(os.environ.get("PORT", 10000))
 
 MAIN_MENU = [
     [InlineKeyboardButton("📋 About", callback_data="about")],
@@ -77,9 +81,30 @@ async def menu_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
     await query.edit_message_text(text, reply_markup=back_button)
 
 
+class HealthCheckHandler(BaseHTTPRequestHandler):
+    """Minimal HTTP handler so Render's free Web Service sees an open port."""
+
+    def do_GET(self):
+        self.send_response(200)
+        self.send_header("Content-type", "text/plain")
+        self.end_headers()
+        self.wfile.write(b"Bot is running")
+
+    def log_message(self, format, *args):
+        pass  # silence default request logging
+
+
+def run_health_server():
+    server = HTTPServer(("0.0.0.0", PORT), HealthCheckHandler)
+    logger.info(f"Health check server listening on port {PORT}")
+    server.serve_forever()
+
+
 def main() -> None:
     if BOT_TOKEN == "PUT-YOUR-TOKEN-HERE":
         raise SystemExit("Set BOT_TOKEN env var before running.")
+
+    threading.Thread(target=run_health_server, daemon=True).start()
 
     app = Application.builder().token(BOT_TOKEN).build()
 
