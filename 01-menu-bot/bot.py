@@ -40,8 +40,8 @@ CONTENT = {
                "• Bot + database — from $300\n"
                "• Bot + payments/admin panel — from $500\n\n"
                "Final price depends on scope.",
-    "contact": "📩 Reach out any time — happy to discuss your bot idea "
-               "and give a free estimate.",
+"contact": "📩 Reach out any time: https://t.me/hdhfgchte\n\n"
+               "Happy to discuss your bot idea and give a free estimate.",
 }
 
 
